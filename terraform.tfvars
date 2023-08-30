@@ -1,5 +1,6 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
+## GKE configuration
 project_id = "ops-397413"
 region     = "australia-southeast1"
+cluster_name = "gke"
+gke_num_nodes = 2
+#shared_vpc = 

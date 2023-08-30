@@ -1,5 +1,3 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
 
 output "region" {
   value       = var.region
@@ -20,3 +18,9 @@ output "kubernetes_cluster_host" {
   value       = google_container_cluster.primary.endpoint
   description = "GKE Cluster Host"
 }
+
+output "gcloud_kubeconfig_command" {
+  value       = format("gcloud container clusters get-credentials ${var.project_id}-gke --region %s --project %s", var.region, var.project_id)
+  description = "generate GCloud kubeconfig command"
+}
+
