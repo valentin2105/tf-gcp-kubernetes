@@ -7,16 +7,17 @@ variable "letsencrypt_contact" {
 provider "kubernetes" {
   #load_config_file = "false"
 
-#username = var.gke_username
-#password = var.gke_password
+  #username = var.gke_username
+  #password = var.gke_password
 
-  host     = google_container_cluster.primary.endpoint
+  host                   = google_container_cluster.primary.endpoint
   client_certificate     = google_container_cluster.primary.master_auth.0.client_certificate
   client_key             = google_container_cluster.primary.master_auth.0.client_key
   cluster_ca_certificate = google_container_cluster.primary.master_auth.0.cluster_ca_certificate
 }
 
 resource "kubernetes_namespace" "dev" {
+  depends_on = [google_container_cluster.primary]
   metadata {
     name = "dev"
   }
@@ -24,6 +25,7 @@ resource "kubernetes_namespace" "dev" {
 
 
 resource "kubernetes_namespace" "cert-manager" {
+  depends_on = [google_container_cluster.primary]
   metadata {
     name        = "cert-manager"
     annotations = {}
@@ -33,6 +35,7 @@ resource "kubernetes_namespace" "cert-manager" {
 
 
 resource "kubernetes_namespace" "ingress-nginx" {
+  depends_on = [google_container_cluster.primary]
   metadata {
     name        = "ingress-nginx"
     annotations = {}
@@ -60,9 +63,7 @@ resource "helm_release" "nginx-ingress" {
 }
 
 resource "time_sleep" "wait_for_ingress_service_ip" {
-  depends_on = [
-    helm_release.nginx-ingress
-  ]
+  depends_on      = [helm_release.nginx-ingress]
   create_duration = "45s"
 }
 
@@ -79,6 +80,7 @@ data "kubernetes_service" "nginx-ingress" {
 }
 
 resource "helm_release" "cert-manager" {
+  depends_on = [kubernetes_namespace.cert-manager]
   name       = "cert-manager"
   repository = "https://charts.jetstack.io"
   chart      = "cert-manager"
