@@ -1,4 +1,3 @@
-
 output "region" {
   value       = var.region
   description = "GCloud Region"
@@ -20,7 +19,7 @@ output "kubernetes_cluster_host" {
 }
 
 output "gcloud_kubeconfig_command" {
-  value       = format("gcloud container clusters get-credentials ${var.project_id}-gke --region %s --project %s", var.region, var.project_id)
+  value       = format("gcloud container clusters get-credentials ${var.cluster_name}-${var.project_id} --region %s --project %s", var.region, var.project_id)
   description = "generate GCloud kubeconfig command"
 }
 

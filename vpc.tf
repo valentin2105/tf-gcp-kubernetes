@@ -1,4 +1,3 @@
-
 variable "project_id" {
   description = "project id"
 }
@@ -6,10 +5,14 @@ variable "project_id" {
 variable "region" {
   description = "region"
 }
+variable "service_account_path" {
+  description = "file path for service_account"
+}
 
 provider "google" {
-  project = var.project_id
-  region  = var.region
+  credentials = file("${var.service_account_path}")
+  project     = var.project_id
+  region      = var.region
 }
 
 # VPC

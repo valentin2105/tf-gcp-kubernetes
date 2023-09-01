@@ -1,4 +1,3 @@
-
 variable "gke_username" {
   default     = ""
   description = "gke username"
@@ -12,6 +11,16 @@ variable "gke_password" {
 variable "gke_num_nodes" {
   default     = 2
   description = "number of gke nodes"
+}
+
+variable "gke_max_num_nodes" {
+  default     = 2
+  description = "number of max gke nodes"
+}
+
+variable "gke_node_type" {
+  default     = "e2-highcpu-4"
+  description = "gke node type"
 }
 
 variable "cluster_name" {
@@ -34,6 +43,9 @@ resource "google_container_cluster" "primary" {
   # node pool and immediately delete it.
   remove_default_node_pool = true
   initial_node_count       = 1
+  release_channel {
+    channel = "STABLE"
+  }
 
   network    = google_compute_network.vpc.name
   subnetwork = google_compute_subnetwork.subnet.name
@@ -45,9 +57,13 @@ resource "google_container_node_pool" "primary_nodes" {
   location = var.region
   cluster  = google_container_cluster.primary.name
 
-  version    = data.google_container_engine_versions.gke_version.release_channel_latest_version["STABLE"]
-  node_count = var.gke_num_nodes
+  version            = data.google_container_engine_versions.gke_version.release_channel_latest_version["STABLE"]
+  initial_node_count = var.gke_num_nodes
 
+  autoscaling {
+    min_node_count = var.gke_num_nodes
+    max_node_count = var.gke_max_num_nodes
+  }
   node_config {
     oauth_scopes = [
       "https://www.googleapis.com/auth/logging.write",
@@ -58,8 +74,9 @@ resource "google_container_node_pool" "primary_nodes" {
       env = var.project_id
     }
 
+
     # preemptible  = true
-    machine_type = "n1-standard-1"
+    machine_type = var.gke_node_type
     tags         = ["gke-node", "${var.project_id}-gke"]
     disk_size_gb = 80
     metadata = {

@@ -1,3 +1,5 @@
+data "google_client_config" "default" {
+}
 
 variable "letsencrypt_contact" {
   default     = ""
@@ -5,15 +7,17 @@ variable "letsencrypt_contact" {
 }
 
 provider "kubernetes" {
-  #load_config_file = "false"
+  host                   = "https://${google_container_cluster.primary.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth.0.cluster_ca_certificate)
+}
 
-  #username = var.gke_username
-  #password = var.gke_password
-
-  host                   = google_container_cluster.primary.endpoint
-  client_certificate     = google_container_cluster.primary.master_auth.0.client_certificate
-  client_key             = google_container_cluster.primary.master_auth.0.client_key
-  cluster_ca_certificate = google_container_cluster.primary.master_auth.0.cluster_ca_certificate
+provider "helm" {
+  kubernetes {
+    host                   = "https://${google_container_cluster.primary.endpoint}"
+    token                  = data.google_client_config.default.access_token
+    cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth.0.cluster_ca_certificate)
+  }
 }
 
 resource "kubernetes_namespace" "dev" {
@@ -85,7 +89,8 @@ resource "helm_release" "cert-manager" {
   repository = "https://charts.jetstack.io"
   chart      = "cert-manager"
   version    = "v1.12.3"
-  namespace  = kubernetes_namespace.cert-manager.metadata[0].name
+  #namespace  = kubernetes_namespace.cert-manager.metadata[0].name
+  namespace = "cert-manager"
   set {
     name  = "installCRDs"
     value = "true"
